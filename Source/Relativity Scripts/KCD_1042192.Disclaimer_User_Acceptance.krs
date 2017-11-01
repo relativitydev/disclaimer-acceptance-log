@@ -1,0 +1,113 @@
+<script>
+	<name>Disclaimer User Acceptance</name>
+	<version>3.2</version>
+	<description>This script reports on user acceptance for a disclaimer. KCD_1042192</description>
+	<category>Disclaimer_Acceptance_Reporting</category>
+	<input orientation="horizontal">
+		<sql id="disclaimerId" name="Disclaimers">
+	SELECT
+		Display = [Title],
+		Id = [ArtifactID]
+	FROM [EDDSDBO].[Disclaimer]
+	UNION
+	SELECT
+		Display = [Title],
+		Id = [ID]
+	FROM #MasterDatabasePrepend#[KCD_1042192_DisclaimerArchive]
+	ORDER BY [ID] DESC
+</sql>
+		<constant id="includeDisclText" name="Include Disclaimer Text" type="text">
+			<option>No</option>
+			<option>Yes</option>
+		</constant>
+	</input>
+	<display type="itemlist" />
+	<action returns="table" name="Acceptance Log"><![CDATA[
+
+EXEC('
+CREATE PROCEDURE #GetDisclaimerObjTableName
+(      
+	@disclaimerObjGuid uniqueIdentifier,
+	@DisclaimerObjTableName varchar(max) OUTPUT
+)  
+AS  
+BEGIN  
+	SELECT @DisclaimerObjTableName = ''EDDSDBO.'' +[ArtifactType]
+		FROM [EDDSDBO].[ArtifactType] AS [AT]
+		WHERE [ArtifactTypeID] IN(
+			SELECT [OT].[DescriptorArtifactTypeID]
+				FROM [EDDSDBO].[ObjectType] AS [OT]
+				INNER JOIN [EDDSDBO].[ArtifactGuid] AS [AG] ON [OT].[ArtifactID] = [AG].[ArtifactID]
+				WHERE [AG].[ArtifactGuid] = @disclaimerObjGuid
+		)
+		RETURN
+END  
+')	
+
+--Variable Declaration
+DECLARE @disclaimerId int = #disclaimerId#;
+DECLARE @includeDisclaimerText char(3) = #includeDisclText#;
+DECLARE @disclaimerObjGuid uniqueIdentifier = '3F24FC94-F118-44FA-9A40-078D3B92FDB4'; 
+DECLARE @DisclaimerObjTableName nvarchar(max);
+
+--Get the name of the Disclaimer table
+EXEC #GetDisclaimerObjTableName @disclaimerObjGuid = @disclaimerObjGuid, @DisclaimerObjTableName = @DisclaimerObjTableName OUTPUT
+
+--Depending on user input, either show or hide the disclaimer text column
+IF @includeDisclaimerText = 'Yes'
+	BEGIN
+		EXEC('
+			SELECT  [Log].[UserID],
+						[U].[FirstName],
+						[U].[LastName],
+						[U].[EmailAddress],
+						''Date Of Acceptance'' = Convert(VARCHAR(24),[Log].[DateAccepted]),
+						''Disclaimer Title'' = [Disclaimers].[Display],
+						''Disclaimer Text'' = [Disclaimers].[Text]
+					FROM #MasterDatabasePrepend#[KCD_1042192_DisclaimerAcceptanceLog] AS [Log]
+					LEFT JOIN #MasterDatabasePrepend#[User] AS [U] ON [U].[ArtifactID] = [Log].[UserID]
+					INNER JOIN (
+						SELECT
+							Display = [Title],
+							Id = [ArtifactID],
+							Text
+						FROM ' +@DisclaimerObjTableName
+					+' UNION
+						SELECT
+							Display = [Title],
+							Id = [ID],
+							Text = [DisclaimerText]
+						FROM #MasterDatabasePrepend#[KCD_1042192_DisclaimerArchive]
+						) As [Disclaimers] ON [Log].[DisclaimerID] = [Disclaimers].[ID]
+					WHERE [Log].[DisclaimerId] = ' +@disclaimerId
+					+' ORDER BY [DateAccepted] DESC
+				')
+	END
+ELSE
+	BEGIN
+		EXEC('
+			SELECT  [Log].[UserID],
+						[U].[FirstName],
+						[U].[LastName],
+						[U].[EmailAddress],
+						''Date Of Acceptance'' = Convert(VARCHAR(24),[Log].[DateAccepted]),
+						''Disclaimer Title'' = [Disclaimers].[Display]
+					FROM #MasterDatabasePrepend#[KCD_1042192_DisclaimerAcceptanceLog] AS [Log]
+					LEFT JOIN #MasterDatabasePrepend#[User] AS [U] ON [U].[ArtifactID] = [Log].[UserID]
+					INNER JOIN (
+						SELECT
+							Display = [Title],
+							Id = [ArtifactID]
+						FROM ' +@DisclaimerObjTableName
+					+' UNION
+						SELECT
+							Display = [Title],
+							Id = [ID]
+						FROM #MasterDatabasePrepend#[KCD_1042192_DisclaimerArchive]
+						) As [Disclaimers] ON [Log].[DisclaimerID] = [Disclaimers].[ID]
+					WHERE [Log].[DisclaimerId] = ' +@disclaimerId
+					+' ORDER BY [DateAccepted] DESC
+				')
+	END
+	]]></action>
+</script>

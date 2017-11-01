@@ -1,0 +1,20 @@
+<script>
+	<name>Disclaimer User Errors</name>
+	<version>3.2</version>
+	<description>This script reports on errors that occur during disclaimer acceptance. KCD_1042192</description>
+	<category>Disclaimer_Acceptance_Reporting</category>
+	<display type="itemlist" />
+	<action returns="table" name="Errors"><![CDATA[
+		
+			SELECT 'Date of Error'= Convert(VARCHAR(24),[Date])
+			,[Error]
+			,[UserID]
+			,[U].[FirstName]
+			,[U].[LastName]
+			,[U].[EmailAddress]
+			FROM #MasterDatabasePrepend#[KCD_1042192_DisclaimerError] AS [E]
+			LEFT JOIN #MasterDatabasePrepend#[User] AS [U] ON [U].[ArtifactID] = [E].[UserID]
+			ORDER BY [Date] DESC
+		
+	]]></action>
+</script>

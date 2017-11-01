@@ -1,0 +1,328 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="LoginPage" xml:space="preserve">
+    <value>&lt;div id="_customDisclaimerProcessingMessageContainer" style="z-index:100000; position:fixed; width:100%; height:100%; top:0; left:0; display:table; vertical-align:middle;font-weight:bold;text-align:center; font-size:2em"&gt;&lt;div id="_customDisclaimerProcessingMessage" style="display:table-cell; vertical-align:middle; height:100px; overflow:visible"&gt;Please wait while loading disclaimers&lt;/div&gt;&lt;/div&gt;
+&lt;div id="_customDisclaimerMain" style="z-index:99998; position:fixed; width:100%; height:100%; top:0; left:0; visibility: hidden"&gt;
+ &lt;div style="z-index:99999; padding:10px; width:500px; height:600px; position:absolute; margin-top:-300px; margin-left:-250px; top:50%; left:50%;background-color:#f7f7f7; overflow-y: auto; border-radius: 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px;"&gt;
+  &lt;div id="_customDisclaimerDisplayCount" style="font-size:.7em; margin: 5px 5px 0px 0px;text-align:right"&gt;
+   
+  &lt;/div&gt;
+  &lt;div id="_customDisclaimerTitle" style="font-size:1em; margin: 20px 10px;text-align:center; font-weight:bold"&gt;
+   
+  &lt;/div&gt;
+   &lt;div  style="font-size:1em; border: 1px solid #000000;height: 400px; overflow-y: auto;background-color:#ffffff"&gt;
+    &lt;div id="_customDisclaimerText" style="margin:10px; text-align:left"&gt;
+     
+    &lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div style="margin-top: 20px; text-align:center"&gt;
+   &lt;input name="_customAcceptDisclaimer" type="checkbox" id="_customAcceptDisclaimer" onclick="CustomToggleAcceptButton();" /&gt; I accept the terms of the agreement 
+   &lt;br /&gt;&lt;br /&gt;
+   &lt;a id="_customAcceptButton" class="ActionButtonDisabled" href="javascript:GetEligibleDisclaimers();"&gt;Accept&lt;/a&gt;
+  &lt;/div&gt;
+ &lt;/div&gt;
+&lt;/div&gt;
+  
+  &lt;script&gt;
+
+	//Relativity Application Guid
+	var ApplicationGuid = "{0}";
+	var AcceptCheckbox = window.document.getElementById("_customAcceptDisclaimer");
+	var MessageBoxContainer = document.getElementById("_customDisclaimerProcessingMessageContainer");
+	var MainContainer = document.getElementById("_customDisclaimerMain");
+	var AllowAccessOnError = {1};
+	
+	//Models
+	function Identifier(identifyingNumber){
+		this.Id = identifyingNumber;
+	}
+	function Error(msg){
+		this.ErrorMessage = msg;
+	}
+	
+	//Apply version specific styles
+	function InitializeVersionSpecificStyles(){
+		var sourceCode = document.getElementsByTagName("head")[0].innerHTML;
+		
+		
+		var buttonClassName;
+		var bgColor;
+		var fontColor;
+	
+		//select styles depending on version. "buttermilk" found in the header source = Relativity &gt;= 9.0
+		if(sourceCode.indexOf("buttermilk") &gt; -1){
+			bgColor = "#173b71"
+			fontColor = "#ffffff";
+		}else{
+			bgColor = "#ffffff";
+			fontColor = "#000000";
+		}
+		
+		//apply styles
+		document.body.style.background = bgColor;
+		MainContainer.style.background = bgColor;
+		MessageBoxContainer.style.background = bgColor;
+		MessageBoxContainer.style.color = fontColor;
+	}
+	//Gets all disclaimers the user is eligible for
+	function GetEligibleDisclaimers(){
+		//this function has the following 3 ~static properties Count, Disclaimers, CurrentDisclaimer
+		
+		//Get the list of eligible disclaimers &amp; set count equal to 1 if this is the initial call of this function
+		if(!GetEligibleDisclaimers.Count){
+			//GetEligibleDisclaimers.Disclaimers = GetDisclaimers().Disclaimers; 
+			GetEligibleDisclaimers.Count = 1;
+		}
+		
+		//Record Users acceptance  --  this is NOT the first time this function was executed
+		if(GetEligibleDisclaimers.Count &gt; 1){
+			if(AcceptCheckbox.checked){
+				RecordDisclaimerAcceptance( new Identifier(GetEligibleDisclaimers.CurrentDisclaimer.DisclaimerId) );
+			}else{
+				CheckboxReminder();
+				return;
+			}
+		}
+		
+		if(GetEligibleDisclaimers.Disclaimers){
+			if(GetEligibleDisclaimers.Count &gt; GetEligibleDisclaimers.Disclaimers.length ){
+				//user either has no disclaimers to accept or they accepted all possible disclaimers
+				RecordAcceptanceInRelativity(GetEligibleDisclaimers.Disclaimers);
+			}else{
+				//Update the properties on this function in preperation for the next time its called and populate the page with the current disclaimer
+				GetEligibleDisclaimers.CurrentDisclaimer = GetEligibleDisclaimers.Disclaimers[GetEligibleDisclaimers.Count - 1];
+				PopulateDisclaimer(GetEligibleDisclaimers.CurrentDisclaimer, GetEligibleDisclaimers.Count, GetEligibleDisclaimers.Disclaimers.length);
+				GetEligibleDisclaimers.Count++;
+			}
+		}
+	}
+	//Populate the HTML with the current disclaimer
+	function PopulateDisclaimer(disclaimer, currentDisclaimerNumber, numberOfDisclaimers){
+		var countField = window.document.getElementById("_customDisclaimerDisplayCount");
+		var titleField = window.document.getElementById("_customDisclaimerTitle");
+		var textField = window.document.getElementById("_customDisclaimerText");
+			
+		countField.innerHTML = "Disclaimer " +currentDisclaimerNumber +" of " +numberOfDisclaimers; //Disclaimer 1 of 5 etc....
+		titleField.innerHTML = disclaimer.DisclaimerTitle;
+		textField.innerHTML = disclaimer.DisclaimerText;
+		
+		AcceptCheckbox.checked = false;
+		MessageBoxContainer.style.visibility = "hidden";
+		MainContainer.style.visibility = "visible";
+	}
+	//Call out to webapi to get eligible disclaimers
+	function GetDisclaimers(){
+		var response = "";
+		$.ajax({
+			type: "GET",
+			cache: false,
+			url: "CustomPages/GUID/Disclaimer/GetEligibleDisclaimers/".replace("GUID", ApplicationGuid),
+			async: true,
+			success: function(data){
+				if(typeof data.Disclaimers != "undefined" &amp;&amp; data.Success == true){
+					GetEligibleDisclaimers.Disclaimers = data.Disclaimers;
+					GetEligibleDisclaimers();
+				}else if(typeof data.Disclaimers == "undefined"){
+					RecordError(new Error("Unable to parse json object from the GetDisclaimers method."));
+				}else if(typeof data.Message != "undefined"){
+					RecordError(new Error(data.Message));
+				}else{
+					RecordError(new Error("Unable to retrieve disclaimers."));
+				}
+			},
+			error: function(){
+				RecordError(new Error("Unable to retrieve disclaimers."));
+			}
+			});
+		return response;
+	}
+	//Timestamp Users acceptance
+	function RecordDisclaimerAcceptance(disclaimerIdentifierModel){
+		$.ajax({
+			type: "POST",
+			url: "CustomPages/GUID/Disclaimer/AcceptDisclaimer/".replace("GUID", ApplicationGuid),
+			async: false,
+			contentType:"application/x-www-form-urlencoded; charset=UTF-8",
+			data: disclaimerIdentifierModel,
+			error: function(){
+				RecordError(new Error("Unable to record users acceptance."));
+			}
+			});
+	}
+	//Try to record errors
+	function RecordError(errorModel){
+		$.ajax({
+			type: "POST",
+			url: "CustomPages/GUID/Api/Data/Disclaimer/LogError/".replace("GUID", ApplicationGuid),
+			async: false,
+			contentType:"application/x-www-form-urlencoded; charset=UTF-8",
+			data: errorModel,
+			complete: function(){
+				if(AllowAccessOnError == true){
+					RecordAcceptanceInRelativity([]);
+				}else{
+					ShowMessageToUser("Relativity Disclaimer Error, Please contact your administrator.");
+				}
+			}
+			});
+	}
+	//Perform original acceptance postback with ajax so that the Users Relativity acceptance flag can be reset
+	function RecordAcceptanceInRelativity(disclaimers){
+		if(AllowAccessOnError == true || AcceptCheckbox.checked || disclaimers.length == 0 ){
+			//send acceptance using the built-in hidden Relativity accept button
+			window.document.getElementById("_acceptDisclaimer").checked = true;
+			window.document.getElementById("_acceptDisclaimerHiddenButton_button").click();
+		}else{
+			CheckboxReminder();
+		}
+	}
+	//Enable/Disable accept button when checkbox is selected
+	function CustomToggleAcceptButton(){
+		var acceptDisclaimerShowButton = window.document.getElementById("_customAcceptButton");
+		var acceptdisclaimerCheckbox = window.document.getElementById("_customAcceptDisclaimer");
+		if(acceptdisclaimerCheckbox.checked) {
+			acceptDisclaimerShowButton.setAttribute("class", "ActionButton");
+			acceptDisclaimerShowButton.setAttribute("className", "ActionButton");
+			acceptDisclaimerShowButton.removeAttribute("disabled", "");
+		} else {
+			acceptDisclaimerShowButton.setAttribute("class", "ActionButtonDisabled");
+			acceptDisclaimerShowButton.setAttribute("className", "ActionButtonDisabled");
+			acceptDisclaimerShowButton.setAttribute("disabled", "disabled");
+		}
+	}
+	//Remind user to mark the checkbox
+	function CheckboxReminder(){
+		alert("Please select the accept disclaimer checkbox");
+	}
+	//Show Message to user
+	function ShowMessageToUser(msgTxt){
+		MessageBoxContainer.style.visibility = "visible";
+		MainContainer.style.visibility = "hidden";
+		document.getElementById("_customDisclaimerProcessingMessage").innerHTML = msgTxt;
+	}
+	$(window).load(function() {
+		window.document.getElementById("Table1").style.visibility = "hidden"; 
+		MessageBoxContainer.style.visibility = "visible"; 
+		InitializeVersionSpecificStyles();
+		GetDisclaimers();
+	});
+  &lt;/script&gt;</value>
+  </data>
+</root>
