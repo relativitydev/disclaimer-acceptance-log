@@ -317,7 +317,7 @@
 		MainContainer.style.visibility = "hidden";
 		document.getElementById("_customDisclaimerProcessingMessage").innerHTML = msgTxt;
 	}
-	$(window).load(function() {
+	$(window).on("load", function() {
 		window.document.getElementById("Table1").style.visibility = "hidden"; 
 		MessageBoxContainer.style.visibility = "visible"; 
 		InitializeVersionSpecificStyles();
