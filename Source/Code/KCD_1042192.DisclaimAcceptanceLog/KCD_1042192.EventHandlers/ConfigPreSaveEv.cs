@@ -4,6 +4,8 @@ using kCura.EventHandler.CustomAttributes;
 using kCura.Relativity.Client;
 using kCura.Relativity.Client.DTOs;
 using Relativity.API;
+using Relativity.Services.Objects;
+using Relativity.Services.Objects.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -52,33 +54,29 @@ namespace KCD_1042192.EventHandlers
         private Boolean FirstConfigObject(Response response)
         {
             var retValue = true;
-            using (var proxy = Helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = Helper.GetActiveCaseID() };
+            using (IObjectManager objectManager = Helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+                var queryRequest = new QueryRequest
+							  {
+                  ObjectType = new ObjectTypeRef
+							  	{
+                    Guid = Utility.Constants.Guids.Objects.DisclaimerSolutionConfiguration
+							  	},
+							  };
 
-                var query = new Query<RDO>
-                {
-                    ArtifactTypeGuid = Utility.Constants.Guids.Objects.DisclaimerSolutionConfiguration,
-                    Fields = kCura.Relativity.Client.DTOs.FieldValue.NoFields
-                };
-
-                var results = proxy.Repositories.RDO.Query(query);
-                if (results.Success && results.Results.Any())
-                {
-                    var configObjectsArtIds = results.Results.AsEnumerable().Select(x => x.Artifact.ArtifactID).ToList();
-                    if (!configObjectsArtIds.Contains(ActiveArtifact.ArtifactID))
-                    {
-                        response.Success = false;
-                        response.Message = ErrorMaxInstances;
-                        retValue = false;
-                    }
-                }
-                else if (!results.Success)
-                {
-                    throw new Exception("Unable to Query Config objects. " + results.Message);
-                }
+                var queryResult = objectManager.QueryAsync(Helper.GetActiveCaseID(), queryRequest, 0, 1000).Result;
+                if(queryResult.TotalCount > 0)
+				        {
+                  var configObjectsArtIds = queryResult.Objects.AsEnumerable().Select(x => x.ArtifactID).ToList();
+                  if (!configObjectsArtIds.Contains(ActiveArtifact.ArtifactID))
+                  {
+                      response.Success = false;
+                      response.Message = ErrorMaxInstances;
+                      retValue = false;
+                  }
+				        }
                 return retValue;
-            }
+			      }
         }
 
         private void ToggleSolution(IDBContext eddsDbContext, bool? enabled, bool? allowAccessOnError)

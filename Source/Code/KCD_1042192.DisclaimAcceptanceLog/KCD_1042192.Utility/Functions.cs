@@ -1,6 +1,8 @@
 ﻿using kCura.Relativity.Client;
 using kCura.Relativity.Client.DTOs;
 using Relativity.API;
+using Relativity.Services.Objects;
+using Relativity.Services.Objects.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -30,19 +32,30 @@ namespace KCD_1042192.Utility
         //Returns all the User ArtifactIds in the Environment
         public static IEnumerable<Int32> GetAllUserIds(IHelper helper)
         {
-            var userIds = new List<Int32>();
-            var query = new Query<kCura.Relativity.Client.DTOs.User>
-            {
-                Fields = FieldValue.NoFields
-            };
-
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = -1 };
-                var results = QuerySubset.PerformQuerySubset(proxy.Repositories.User, query, 1000);
-                userIds.AddRange(results.Select(x => x.Artifact.ArtifactID).ToList());
-            }
-            return userIds;
+          var queryRequest = new QueryRequest()
+          {
+            ObjectType = new ObjectTypeRef
+						{
+              ArtifactTypeID = 2
+						},
+            Fields = new List<FieldRef>
+						{
+              new FieldRef
+							{
+                Name = "Name"
+							}
+						}
+          };
+          List<int> userIds = new List<int>();
+          using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			    {
+            var queryResult = objectManager.QueryAsync(-1, queryRequest,0, 1000).Result;
+            foreach(var obj in queryResult.Objects)
+				    {
+              userIds.Add(obj.ArtifactID);
+				    }
+			    }
+          return userIds;
         }
 
         //Returns the artifactId of a particular Guid
@@ -82,20 +95,26 @@ namespace KCD_1042192.Utility
             var retVal = false;
             var applicationArtifactId = FindApplicationArtifactIdOfRelatedObject(helper.GetDBContext(workspaceArtifactId), associatedApplicationObject);
 
-            var app = new kCura.Relativity.Client.DTOs.RelativityApplication(applicationArtifactId)
-            {
-                Fields = new List<FieldValue> { new FieldValue(RelativityApplicationFieldNames.Locked) }
-            };
-
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                var results = proxy.Repositories.RelativityApplication.Read(app);
-                if (results.Success && results.Results.Any())
-                {
-                    retVal = results.Results[0].Artifact.Locked.GetValueOrDefault(false);
-                }
-            }
+            var readRequest = new ReadRequest
+						{
+              Object = new RelativityObjectRef { ArtifactID = applicationArtifactId },
+              Fields = new List<FieldRef>
+							{
+                new FieldRef
+								{
+                  Name = "Locked"
+								}
+							},
+						};
+            
+            using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var readResult = objectManager.ReadAsync(workspaceArtifactId, readRequest).Result;
+				      if (readResult.Object.FieldValues.Any())
+				      {
+                retVal = (bool)readResult.Object.FieldValues[0].Value;
+              }
+			      }
 
             return retVal;
         }
@@ -118,22 +137,41 @@ namespace KCD_1042192.Utility
         public static Boolean DisclaimerSolutionIsEnabled(IHelper helper, Int32 workspaceArtifactId)
         {
             var retVal = false;
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
+			      var queryRequest = new QueryRequest()
             {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                var query = new Query<RDO>
-                {
-                    ArtifactTypeGuid = Constants.Guids.Objects.DisclaimerSolutionConfiguration,
-                    Condition = new BooleanCondition(Constants.Guids.Fields.ConfigurationEnabled, BooleanConditionEnum.EqualTo, true),
-                    Sorts = new List<Sort> { new Sort { Field = ArtifactQueryFieldNames.ArtifactID, Direction = SortEnum.Ascending } },
-                    Fields = new List<FieldValue> { new FieldValue(Constants.Guids.Fields.ConfigurationEnabled) }
-                };
-
-                if (proxy.Repositories.RDO.Query(query).Results.Count > 0)
-                {
-                    retVal = true;
+              ObjectType = new ObjectTypeRef
+					  	{
+                Guid = Constants.Guids.Objects.DisclaimerSolutionConfiguration
+					  	},
+              Fields = new List<FieldRef>
+					  	{
+                new FieldRef
+					  		{
+                  Guid = Constants.Guids.Fields.ConfigurationEnabled
                 }
-            }
+					  	},
+              Sorts = new List<Relativity.Services.Objects.DataContracts.Sort>
+					  	{
+                new Relativity.Services.Objects.DataContracts.Sort
+					  		{
+                  FieldIdentifier = new FieldRef
+					  			{
+                    Name = "Artifact ID"
+					  			},
+                  Direction = Relativity.Services.Objects.DataContracts.SortEnum.Ascending
+					  		}
+					  	},
+            };
+
+            using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var queryResult = objectManager.QueryAsync(workspaceArtifactId, queryRequest,0, 1000).Result;
+              if(queryResult.TotalCount > 0)
+				      {
+                retVal = (bool)queryResult.Objects[0].FieldValues[0].Value;
+				      }
+			      }
+
             return retVal;
         }
 
@@ -183,27 +221,69 @@ namespace KCD_1042192.Utility
         public static IEnumerable<Models.Disclaimer> GetDisclaimers(Int32 workspaceArtifactId, IHelper helper)
         {
             var retVal = new List<Models.Disclaimer>();
-
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
+            var queryRequest = new QueryRequest()
             {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                var query = new Query<RDO>
+              ObjectType = new ObjectTypeRef
+					  	{
+                Guid = Constants.Guids.Objects.Disclaimer
+					  	},
+              Fields = new List<FieldRef>
+					  	{
+                new FieldRef
+					  		{
+                  Guid = Constants.Guids.Fields.DisclaimerTitle
+                },
+                new FieldRef
                 {
-                    ArtifactTypeGuid = Constants.Guids.Objects.Disclaimer,
-                    Sorts = new List<Sort>{
-                            new Sort { Guid = Constants.Guids.Fields.DisclaimerOrder, Direction = SortEnum.Ascending}
-                        },
-                    Fields = FieldValue.AllFields
-                };
-
-                var queryResults = proxy.Repositories.RDO.Query(query);
-
-                if (queryResults.Results.Count > 0)
+                  Guid = Constants.Guids.Fields.DisclaimerText
+                },
+                new FieldRef
                 {
-                    retVal.AddRange(BindQueryResultToDisclaimer(queryResults));
-                    //At this point out Models.group has the artifactIds of Disclaimer Group RDO, here we're gonna swap them out for Relativity group Artifact Ids
-                    ReplaceWorkspaceGroupIdsWithRelativityGroupIds(workspaceArtifactId, retVal, helper);
-                }
+                  Guid = Constants.Guids.Fields.DisclaimerAllUsers
+                },
+                new FieldRef
+                {
+                  Guid = Constants.Guids.Fields.DisclaimerApplicableGroups
+                },
+                new FieldRef
+                {
+                  Guid = Constants.Guids.Fields.DisclaimerOrder
+                },
+                new FieldRef
+                {
+                  Guid = Constants.Guids.Fields.DisclaimerEnabled
+                },
+                new FieldRef
+                {
+                  Guid = Constants.Guids.Fields.DisclaimerReacceptancePeriod
+                },
+                new FieldRef
+                {
+                  Guid = Constants.Guids.Fields.DisclaimerStatus
+                },
+              },
+              Sorts = new List<Relativity.Services.Objects.DataContracts.Sort>
+					  	{
+                new Relativity.Services.Objects.DataContracts.Sort
+					  		{
+                  FieldIdentifier = new FieldRef
+					  			{
+                    Guid = Constants.Guids.Fields.DisclaimerOrder
+					  			},
+                  Direction = Relativity.Services.Objects.DataContracts.SortEnum.Ascending
+					  		}
+					  	}
+            };
+
+            using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var queryResult = objectManager.QueryAsync(workspaceArtifactId, queryRequest,0, 1000).Result;
+              if(queryResult.TotalCount > 0)
+				      {
+                retVal.AddRange(BindQueryResultToDisclaimer(queryResult));
+                //At this point out Models.group has the artifactIds of Disclaimer Group RDO, here we're gonna swap them out for Relativity group Artifact Ids
+                ReplaceWorkspaceGroupIdsWithRelativityGroupIds(workspaceArtifactId, retVal, helper);
+              }
             }
             return retVal;
         }
@@ -216,48 +296,80 @@ namespace KCD_1042192.Utility
                 if (disclaimer.ApplicableGroups.Any())
                 {
                     var disclaimerGroupIds = disclaimer.ApplicableGroups.AsEnumerable().Select(x => x).ToArray();
-                    using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-                    {
-                        proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                        var query = new Query<RDO>
-                        {
-                            ArtifactTypeGuid = Constants.Guids.Objects.DislcaimerGroup,
-                            Condition = new WholeNumberCondition(ArtifactQueryFieldNames.ArtifactID, NumericConditionEnum.In, disclaimerGroupIds),
-                            Fields = new List<FieldValue> {
-                                    new FieldValue(Constants.Guids.Fields.DisclaimerGroupsGroupArtifactId)
-                                }
-                        };
+                    var queryRequest = new QueryRequest
+										{
+                      ObjectType = new ObjectTypeRef
+											{
+                        Guid = Constants.Guids.Objects.DislcaimerGroup
+											},
+                      Fields = new List<FieldRef>
+											{
+                        new FieldRef
+												{
+                          Guid = Constants.Guids.Fields.DisclaimerGroupsGroupArtifactId
+												}
+											},
+										};
 
-                        var queryResults = proxy.Repositories.RDO.Query(query);
-
-                        if (queryResults.Success && queryResults.Results.Any())
-                        {
-                            disclaimer.ApplicableGroups = queryResults.Results.AsEnumerable().Select(x => x.Artifact[Constants.Guids.Fields.DisclaimerGroupsGroupArtifactId].ValueAsWholeNumber.GetValueOrDefault(0)).ToArray();
+                    List<int> applicableGroups = new List<int>();
+                    using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+					          {
+                      var queryResult = objectManager.QueryAsync(workspaceArtifactId, queryRequest, 0, 1000).Result;
+                      if(queryResult.TotalCount > 0)
+						          {
+                        foreach(var obj in queryResult.Objects)
+							          {
+                          int artifactId = (int)obj.FieldValues[0].Value;
+                          if(Array.Exists(disclaimerGroupIds, x => x == artifactId))
+								          {
+                            applicableGroups.Add(artifactId);
+								          }
                         }
-                        else if (!queryResults.Success)
-                        {
-                            throw new Exception("unable to retrieve groups for disclaimer " + disclaimer.DisclaimerId + " " + queryResults.Message);
-                        }
-                    }
+                        disclaimer.ApplicableGroups = applicableGroups;
+						          }
+						          else
+						          {
+                        throw new Exception("unable to retrieve groups for disclaimer " + disclaimer.DisclaimerId);
+						          }
+					          }
                 }
             }
         }
 
         //Binds the results of a Disclaimer RDO query to the structure of this solution's disclaimer model
-        private static IEnumerable<Models.Disclaimer> BindQueryResultToDisclaimer(ResultSet<RDO> queryResults)
+        private static IEnumerable<Models.Disclaimer> BindQueryResultToDisclaimer(Relativity.Services.Objects.DataContracts.QueryResult queryResults)
         {
-            var retVal = queryResults.Results.AsEnumerable().Select(x => new Models.Disclaimer
-            {
-                DisclaimerId = x.Artifact.ArtifactID,
-                DisclaimerTitle = x.Artifact[Constants.Guids.Fields.DisclaimerTitle].ValueAsFixedLengthText,
-                DisclaimerText = x.Artifact[Constants.Guids.Fields.DisclaimerText].ValueAsLongText,
-                AllUsers = x.Artifact[Constants.Guids.Fields.DisclaimerAllUsers].ValueAsYesNo.GetValueOrDefault(false),
-                ApplicableGroups = x.Artifact[Constants.Guids.Fields.DisclaimerApplicableGroups].GetValueAsMultipleObject<kCura.Relativity.Client.DTOs.Artifact>().Select(y => y.ArtifactID).ToList(),
-                Order = x.Artifact[Constants.Guids.Fields.DisclaimerOrder].ValueAsWholeNumber.GetValueOrDefault(0),
-                Enabled = x.Artifact[Constants.Guids.Fields.DisclaimerEnabled].ValueAsYesNo.GetValueOrDefault(false),
-                ReacceptancePeriod = x.Artifact[Constants.Guids.Fields.DisclaimerReacceptancePeriod].ValueAsWholeNumber.GetValueOrDefault(0),
-                Status = x.Artifact[Constants.Guids.Fields.DisclaimerStatus].ValueAsSingleChoice
-            }).ToList();
+            var retVal = new List<Models.Disclaimer>();
+            foreach(var obj in queryResults.Objects)
+			      {
+              bool allUsers = false;
+              if(obj.FieldValues[2].Value != null) allUsers = (bool)obj.FieldValues[2].Value;
+
+              IEnumerable<int> applicableGroups = new List<int>();
+              if(obj.FieldValues[3].Value != null) applicableGroups = ((List<RelativityObjectValue>)obj.FieldValues[3].Value).Select(x => x.ArtifactID);
+
+              int order = 0;
+              if(obj.FieldValues[4].Value != null) order = (int)obj.FieldValues[4].Value;
+
+              bool enabled = false;
+              if(obj.FieldValues[5].Value != null) enabled = (bool)obj.FieldValues[5].Value;
+
+              int reacceptancePeriod = 0;
+              if(obj.FieldValues[6].Value != null) reacceptancePeriod = (int)obj.FieldValues[6].Value;
+
+              retVal.Add(new Models.Disclaimer
+							{
+                DisclaimerId = obj.ArtifactID,
+                DisclaimerTitle = (string)obj.FieldValues[0].Value,
+                DisclaimerText = (string)obj.FieldValues[1].Value,
+                AllUsers = allUsers,
+                ApplicableGroups = applicableGroups,
+                Order = order,
+                Enabled = enabled,
+                ReacceptancePeriod = reacceptancePeriod,
+                Status = (Relativity.Services.Objects.DataContracts.Choice)obj.FieldValues[7].Value
+							});
+			      }
 
             return retVal;
         }

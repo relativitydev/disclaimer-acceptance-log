@@ -4,6 +4,8 @@ using kCura.Agent.CustomAttributes;
 using kCura.Relativity.Client;
 using kCura.Relativity.Client.DTOs;
 using Relativity.API;
+using Relativity.Services.Objects;
+using Relativity.Services.Objects.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +45,10 @@ namespace KCD_1042192.DisclaimerAgent
                         RaiseMessage("Looking for new disclaimers to activate", 10);
                         MaintainDisclaimerQueueStatus(workspaceArtifactID, Helper.GetDBContext(workspaceArtifactID), disclaimers);
                     }
+					          else
+					          {
+                      RaiseMessage(String.Format("No Disclaimers in workspace: {0}", workspaceArtifactID), 10);
+					          }
                 }
                 else
                 {
@@ -95,39 +101,50 @@ namespace KCD_1042192.DisclaimerAgent
                     }
                 }
             }
-            UpdateDisclaimerQueueStatus(workspaceArtifactId, disclaimersToSetActiveStatus, new FieldValue(fieldStatus, new kCura.Relativity.Client.DTOs.Choice(choiceDisclaimerActive)));
-            UpdateDisclaimerQueueStatus(workspaceArtifactId, disclaimersToSetDisabledStatus, new FieldValue(fieldStatus));
+            RelativityObjectRef activeStatusChoice = new RelativityObjectRef
+						{
+              Guid = choiceDisclaimerActive
+						};
+            UpdateDisclaimerQueueStatus(workspaceArtifactId, disclaimersToSetActiveStatus, activeStatusChoice);
+            UpdateDisclaimerQueueStatus(workspaceArtifactId, disclaimersToSetDisabledStatus, null);
         }
 
-        private void UpdateDisclaimerQueueStatus(Int32 workspaceArtifactId, IEnumerable<Models.Disclaimer> disclaimersToUpdate, FieldValue newDislclaimerQueueStatusValue)
+        private void UpdateDisclaimerQueueStatus(Int32 workspaceArtifactId, IEnumerable<Models.Disclaimer> disclaimersToUpdate, RelativityObjectRef relativityObjectRef)
         {
             if (disclaimersToUpdate.Any())
             {
-                var updateList = new List<RDO>();
+                var massUpdateRequest = new MassUpdateByObjectIdentifiersRequest();
+                List<RelativityObjectRef> objects = new List<RelativityObjectRef>();
+                foreach(var disclaimer in disclaimersToUpdate)
+				        {
+                  objects.Add(new RelativityObjectRef
+                  {
+                    ArtifactID = disclaimer.DisclaimerId
+                  });
+				        }
 
-                foreach (var disclaimer in disclaimersToUpdate)
-                {
-                    var rdo = new RDO(disclaimer.DisclaimerId)
-                    {
-                        ArtifactTypeGuids = new List<Guid> { Utility.Constants.Guids.Objects.Disclaimer },
-                        Fields = new List<FieldValue> { newDislclaimerQueueStatusValue }
-                    };
-                    updateList.Add(rdo);
-                }
+                List<FieldRefValuePair> fieldRefValuePairs = new List<FieldRefValuePair>
+								{
+                  new FieldRefValuePair
+									{
+                    Field = new FieldRef
+										{
+                      Guid = Utility.Constants.Guids.Fields.DisclaimerStatus
+                    },
+                    Value = relativityObjectRef
+                  }
+								};
+                massUpdateRequest.Objects = objects;
+                massUpdateRequest.FieldValues = fieldRefValuePairs;
 
-                if (updateList.Any())
-                {
-                    using (var proxy = Helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-                    {
-                        proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                        var results = proxy.Repositories.RDO.Update(updateList);
-
-                        if (!results.Success)
-                        {
-                            throw new Exception("Unable to updated disclaimer queue status: " + results.Message);
-                        }
-                    }
-                }
+                using(IObjectManager objectManager = Helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+				        {
+                  var updateResult = objectManager.UpdateAsync(workspaceArtifactId, massUpdateRequest).Result;
+					        if (!updateResult.Success)
+					        {
+                    throw new Exception("Unable to updated disclaimer queue status: " + updateResult.Message);
+					        }
+				        }
             }
         }
 
