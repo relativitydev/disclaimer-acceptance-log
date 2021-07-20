@@ -1,6 +1,8 @@
 ﻿using kCura.Relativity.Client;
 using kCura.Relativity.Client.DTOs;
 using Relativity.API;
+using Relativity.Services.Objects;
+using Relativity.Services.Objects.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,31 +60,33 @@ namespace KCD_1042192.Utility
         private static Dictionary<Int32, Models.Group> GetGroupsInRelativity(IHelper helper)
         {
             var retVal = new Dictionary<Int32, Models.Group>();
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = -1 };
-                var queryRelativityGroups = new Query<Group>
-                {
-                    Fields = new List<FieldValue> { new FieldValue(GroupFieldNames.Name) }
-                };
-                var relativityGroupResults = proxy.Repositories.Group.Query(queryRelativityGroups);
+            using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var queryRequest = new QueryRequest
+              {
+                ObjectType = new ObjectTypeRef
+								{
+                  ArtifactTypeID = 3
+								},
+                Fields = new List<FieldRef>
+								{
+                  new FieldRef
+									{
+                    Name = "Name"
+									}
+								},
+              };
 
-                if (relativityGroupResults.Success)
-                {
-                    foreach (var relativityGroup in relativityGroupResults.Results)
-                    {
-                        retVal.Add(relativityGroup.Artifact.ArtifactID, new Models.Group
-                        {
-                            GroupId = relativityGroup.Artifact.ArtifactID,
-                            GroupName = relativityGroup.Artifact.Name
-                        });
-                    }
-                }
-                else
-                {
-                    throw new Exception("Unable to Query EDDS for Groups: " + relativityGroupResults.Message);
-                }
-            }
+              var queryResult = objectManager.QueryAsync(-1, queryRequest, 0, 1000).Result;
+              foreach(var obj in queryResult.Objects)
+				      {
+                retVal.Add(obj.ArtifactID, new Models.Group
+								{
+                  GroupId = obj.ArtifactID,
+                  GroupName = obj.FieldValues[0].Value.ToString()
+								});
+				      }
+			      }
             return retVal;
         }
 
@@ -95,44 +99,53 @@ namespace KCD_1042192.Utility
         private static Dictionary<Int32, Models.Group> GetGroupsAddedToWorkspace(IHelper helper, Int32 workspaceArtifactId, Guid workspaceGroupObject, Guid workspaceGroupObjectNameField, Guid workspaceGroupObjectEddsIdField)
         {
             var retVal = new Dictionary<Int32, Models.Group>();
+            using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var queryRequest = new QueryRequest
+              {
+                ObjectType = new ObjectTypeRef
+								{
+                  Guid = workspaceGroupObject
+								},
+                Fields = new List<FieldRef>
+								{
+                  new FieldRef
+									{
+                    Guid = workspaceGroupObjectEddsIdField
+									},
+                  new FieldRef
+									{
+                    Guid = workspaceGroupObjectNameField
+									}
+								},
+              };
 
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                var queryWorkspaceGroups = new Query<RDO>
-                {
-                    ArtifactTypeGuid = workspaceGroupObject,
-                    Fields = new List<FieldValue>
-                    {
-                        new FieldValue(workspaceGroupObjectEddsIdField),
-                        new FieldValue(workspaceGroupObjectNameField)
-                    }
-                };
-                var workspaceGroupResults = proxy.Repositories.RDO.Query(queryWorkspaceGroups);
-
-                if (workspaceGroupResults.Success)
-                {
-                    foreach (var workspaceGroup in workspaceGroupResults.Results)
-                    {
-                        retVal.Add(workspaceGroup.Artifact.ArtifactID, new Models.Group
-                        {
-                            GroupId = workspaceGroup.Artifact[workspaceGroupObjectEddsIdField].ValueAsWholeNumber.GetValueOrDefault(0),
-                            GroupName = workspaceGroup.Artifact[workspaceGroupObjectNameField].ValueAsFixedLengthText
-                        });
-                    }
-                }
-                else
-                {
-                    throw new Exception("Unable to query workspace for Groups RDO: " + workspaceGroupResults.Message);
-                }
-            }
+              var queryResult = objectManager.QueryAsync(workspaceArtifactId, queryRequest, 0, 1000).Result;
+              foreach(var obj in queryResult.Objects)
+				      {
+                retVal.Add(obj.ArtifactID, new Models.Group
+								{
+                  GroupId = (int)obj.FieldValues[0].Value,
+                  GroupName = obj.FieldValues[1].Value.ToString()
+								});
+				      }
+			      }
             return retVal;
         }
 
         //Update Disclaimer Group DTO's Group name from Relativity EDDS collection
         private static void UpdateGroupNamesInWorkspace(IHelper helper, Int32 workspaceArtifactId, Dictionary<Int32, Models.Group> allWorkspaceGroups, Dictionary<Int32, Models.Group> allRelativityGroups, Guid workspaceGroupObject, Guid workspaceGroupObjectNameField)
         {
-            var rdosToUpdate = new List<RDO>();
+            var massUpdateRequest = new MassUpdatePerObjectsRequest();
+            List<ObjectRefValuesPair> objectRefValuesPairs = new List<ObjectRefValuesPair>();
+            List<FieldRef> fields = new List<FieldRef>
+						{
+              new FieldRef
+							{
+                Guid = workspaceGroupObjectNameField
+							}
+						};
+
             foreach (var workspaceGroup in allWorkspaceGroups)
             {
                 if (allRelativityGroups.ContainsKey(workspaceGroup.Value.GroupId))
@@ -142,78 +155,93 @@ namespace KCD_1042192.Utility
                     //if Someone changed the Edds Level GroupName, update it's workspace counterpart
                     if (!workspaceGroupName.Equals(relativityGroupName))
                     {
-                        var rdo = new RDO(workspaceGroup.Key)
-                        {
-                            ArtifactTypeGuids = new List<Guid> { workspaceGroupObject },
-                            Fields = new List<FieldValue> { new FieldValue(workspaceGroupObjectNameField, relativityGroupName) }
-                        };
-                        rdosToUpdate.Add(rdo);
+                        var objectRefValuePair = new ObjectRefValuesPair
+												{
+                          Object = new RelativityObjectRef
+													{
+                            ArtifactID = workspaceGroup.Key
+													},
+                          Values = new List<object> { relativityGroupName }
+												};
+                        objectRefValuesPairs.Add(objectRefValuePair);
                     }
                 }
             }
 
-            if (rdosToUpdate.Any())
+            if (objectRefValuesPairs.Any())
             {
-                using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-                {
-                    proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                    proxy.Repositories.RDO.Update(rdosToUpdate);
-                    //Not worried about the results because it's possible that the user removed a group from the workspace, in that case the update would fail for that specific RDO but the others would update successfully
-                }
+                massUpdateRequest.ObjectValues = objectRefValuesPairs;
+                massUpdateRequest.Fields = fields;
+                using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+				        {
+                  var updateResult = objectManager.UpdateAsync(workspaceArtifactId, massUpdateRequest).Result;
+                  //Not worried about the results because it's possible that the user removed a group from the workspace, in that case the update would fail for that specific RDO but the others would update successfully
+				        }
             }
         }
 
         private static void AddNewGroupsToWorkspace(IHelper helper, Int32 workspaceArtifactId, Dictionary<Int32, Models.Group> relativityGroupDictionary, IEnumerable<Int32> newGroupArtifactIds, Guid workspaceGroupObject, Guid workspaceGroupObjectNameField, Guid workspaceGroupObjectEddsIdField)
         {
             //build a list of New workspace level groups to create
-            var rdosToAdd = new List<RDO>();
+            var massCreateRequest = new MassCreateRequest();
+            massCreateRequest.ObjectType = new ObjectTypeRef { Guid = workspaceGroupObject };
+            massCreateRequest.Fields = new List<FieldRef>
+						{
+              new FieldRef
+							{
+                Guid = workspaceGroupObjectNameField
+              },
+              new FieldRef
+							{
+                Guid = workspaceGroupObjectEddsIdField
+              }
+						};
+            List<List<object>> values = new List<List<object>>();
+            
             foreach (var newGroupId in newGroupArtifactIds)
             {
                 var newGroupToAdd = relativityGroupDictionary[newGroupId];
-                var rdo = new RDO
-                {
-                    ArtifactTypeGuids = new List<Guid> { workspaceGroupObject },
-                    Fields = new List<FieldValue>{
-                        new FieldValue(workspaceGroupObjectNameField, newGroupToAdd.GroupName),
-                        new FieldValue(workspaceGroupObjectEddsIdField, newGroupId)
-                    }
-                };
-                rdosToAdd.Add(rdo);
+                var newGroupValues = new List<object>
+								{
+                  newGroupToAdd.GroupName,
+                  newGroupId
+								};
+                values.Add(newGroupValues);
             }
+            massCreateRequest.ValueLists = values;
 
-            //Send the Create call to the RSAPI
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                var results = proxy.Repositories.RDO.Create(rdosToAdd);
-
-                if (!results.Success)
-                {
-                    throw new Exception("Unable to create new groups in workspace " + workspaceArtifactId + ": " + String.Join(" , ", results.Results.AsEnumerable().Where(x => x.Success == false).Select(x => x.Message).ToList()));
-                }
-            }
+            //Send the Create call to Object Manager
+            using(IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var createResult = objectManager.CreateAsync(workspaceArtifactId, massCreateRequest).Result;
+				      if (!createResult.Success)
+				      {
+                throw new Exception("Unable to create new groups in workspace " + workspaceArtifactId + ": " + createResult.Message);
+              }
+			      }
         }
 
         private static void DeleteNonExistantGroupsFromWorkspace(IHelper helper, Int32 workspaceArtifactId, Dictionary<Int32, Models.Group> nonExistantGroups, Guid workspaceGroupObject)
         {
             //Build a list of Groups rdos to Delete
-            var rdosToDelete = new List<RDO>();
+            var massDeleteRequest = new MassDeleteByObjectIdentifiersRequest();
+            List<RelativityObjectRef> objectsToDelete = new List<RelativityObjectRef>();
             foreach (var group in nonExistantGroups)
             {
-                var rdo = new RDO(group.Key)
-                {
-                    ArtifactTypeGuids = new List<Guid> { workspaceGroupObject },
-                };
-                rdosToDelete.Add(rdo);
+                var obj = new RelativityObjectRef
+								{
+                  ArtifactID = group.Key
+								};
+                objectsToDelete.Add(obj);
             }
+            massDeleteRequest.Objects = objectsToDelete;
 
             //Send the call
-            using (var proxy = helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceArtifactId };
-                proxy.Repositories.RDO.Delete(rdosToDelete);
-                //Not worried if some deletions fail because it's possible that they are linked to other objects as dependencies or already deleted
-            }
+            using (IObjectManager objectManager = helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var deleteResult = objectManager.DeleteAsync(workspaceArtifactId, massDeleteRequest).Result;
+              //Not worried if some deletions fail because it's possible that they are linked to other objects as dependencies or already deleted
+			      }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Relativity.Services.Objects.DataContracts;
+using System;
 using System.Collections.Generic;
 using DTOs = kCura.Relativity.Client.DTOs;
 
@@ -52,7 +53,7 @@ namespace KCD_1042192.Utility
             public Boolean AllUsers;
             public Int32 ReacceptancePeriod;
             public IEnumerable<Int32> ApplicableGroups;
-            public DTOs.Choice Status;
+            public Relativity.Services.Objects.DataContracts.Choice Status;
         }
 
         public class User
