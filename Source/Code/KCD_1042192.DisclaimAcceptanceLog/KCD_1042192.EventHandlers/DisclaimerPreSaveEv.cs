@@ -3,6 +3,8 @@ using kCura.EventHandler.CustomAttributes;
 using kCura.Relativity.Client;
 using kCura.Relativity.Client.DTOs;
 using Relativity.API;
+using Relativity.Services.Objects;
+using Relativity.Services.Objects.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,32 +66,37 @@ namespace KCD_1042192.EventHandlers
 
         private Boolean YesNoFieldChanged(Guid fieldGuid)
         {
-            bool oldValue = (GetOldFieldValueFromRsapi(fieldGuid, Helper.GetActiveCaseID(), ActiveArtifact.ArtifactID).ValueAsYesNo).GetValueOrDefault(false);
+            bool oldValue = GetOldFieldValueFromRsapi(fieldGuid, Helper.GetActiveCaseID(), ActiveArtifact.ArtifactID);
             bool newValue = ((bool?)ActiveArtifact.Fields[fieldGuid.ToString()].Value.Value).GetValueOrDefault(false);
 
             return (!oldValue.Equals(newValue));
         }
 
-        private kCura.Relativity.Client.DTOs.FieldValue GetOldFieldValueFromRsapi(Guid fieldGuid, Int32 workspaceId, Int32 artId)
+        private bool GetOldFieldValueFromRsapi(Guid fieldGuid, Int32 workspaceId, Int32 artId)
         {
-            kCura.Relativity.Client.DTOs.FieldValue returnObj = null;
-
-            var rdo = new RDO(artId)
+            bool returnVal = false;
+            var readRequest = new ReadRequest
             {
-                ArtifactTypeGuids = new List<Guid> { Utility.Constants.Guids.Objects.Disclaimer },
-                Fields = new List<kCura.Relativity.Client.DTOs.FieldValue> { new kCura.Relativity.Client.DTOs.FieldValue(fieldGuid) }
+              Object = new RelativityObjectRef
+							{
+                ArtifactID = artId
+							},
+              Fields = new List<FieldRef>
+							{
+                new FieldRef
+								{
+                  Guid = fieldGuid
+								}
+							}
             };
 
-            using (var proxy = Helper.GetServicesManager().CreateProxy<IRSAPIClient>(ExecutionIdentity.System))
-            {
-                proxy.APIOptions = new APIOptions { WorkspaceID = workspaceId };
-                var result = proxy.Repositories.RDO.Read(rdo);
-                if (result.Success && result.Results.Any())
-                {
-                    returnObj = result.Results[0].Artifact.Fields.First(x => x.Guids.Contains(fieldGuid));
-                }
-            }
-            return returnObj;
+            using (IObjectManager objectManager = Helper.GetServicesManager().CreateProxy<IObjectManager>(ExecutionIdentity.System))
+			      {
+              var readResult = objectManager.ReadAsync(workspaceId, readRequest).Result;
+              returnVal = (bool)readResult.Object.FieldValues[0].Value;
+			      }
+            
+            return returnVal;
         }
 
         public override FieldCollection RequiredFields
