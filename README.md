@@ -1,3 +1,6 @@
+# Archived #
+This application is no longer in use, and is no longer supported. Use at your own risk.
+
 # disclaimer-acceptance-log
 Open Source Community: This Relativity Applications allows users to display multiple group specific and/or environment wide disclaimers upon login.
 
